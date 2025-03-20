@@ -17,10 +17,10 @@ app.secret_key = "supersecretkey"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     "postgresql://test_gift_user:"
-    "qFybJnSvWjy7106FzmaI2kv7TB1jDNF"  # Mật khẩu
-    "@dpg-cvxdp2a2i3r73bd24h20-a:5432"  # Host + Port
-    "/test_gift"                       # Tên database
+    "qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE"
+    "@dpg-cvdpab2n91rc73ba4h20-a.db.render.com:5432/test_gift"
 )
+
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
