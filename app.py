@@ -16,9 +16,8 @@ app.secret_key = "supersecretkey"
 # Password: qFybJnSvWjy7106FzmaI2kv7TB1jDNF
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "postgresql://test_gift_user:"
-    "qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE"
-    "@dpg-cvdpab2n91rc73ba4h20-a.db.render.com:5432/test_gift"
+    "postgresql://test_gift_user:qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE@"
+    "dpg-cvdpab2n91rc73ba4h20-a.oregon-postgres.render.com/test_gift"
 )
 
 
