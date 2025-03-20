@@ -3,12 +3,9 @@ from flask import Flask, redirect, url_for, request, render_template, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
-# Sử dụng SECRET_KEY từ biến môi trường nếu có, hoặc dùng giá trị mặc định (nên thay đổi cho bảo mật)
 app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
-
-# Cập nhật chuỗi kết nối PostgreSQL theo thông tin bạn cung cấp:
-app.config["SQLALCHEMY_DATABASE_URI"] = (
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL",
     "postgresql://test_gift_user:qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE@dpg-cvdpab2n91rc73ba4h20-a/test_gift"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -20,15 +17,19 @@ class GiftBox(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=True)
-    # Quan hệ 1-1 với Selection (mỗi hộp quà chỉ được chọn một lần)
+    # Quan hệ 1-1 với Selection (mỗi hộp quà chỉ được chọn 1 lần)
     selection = db.relationship('Selection', backref='gift', uselist=False)
 
 # Model lưu thông tin lựa chọn quà của người dùng
 class Selection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_name = db.Column(db.String(100), nullable=False)
-    student_code = db.Column(db.String(50), nullable=False, unique=True)  # Mỗi mã sinh viên chỉ chọn 1 lần
+    student_code = db.Column(db.String(50), nullable=False, unique=True)
     gift_box_id = db.Column(db.Integer, db.ForeignKey("gift_box.id"), nullable=False)
+
+# Tạo bảng ngay khi module được import (để Gunicorn có thể sử dụng)
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -38,7 +39,6 @@ def index():
 @app.route("/result/<int:gift_id>")
 def result(gift_id):
     gift = GiftBox.query.get_or_404(gift_id)
-    # Nếu hộp quà chưa được chọn, không cho phép xem chi tiết
     if not gift.selection:
         flash("Hộp quà này chưa được chọn, bạn không thể xem chi tiết!")
         return redirect(url_for("index"))
@@ -103,8 +103,19 @@ def add_gift():
             return redirect(url_for("index"))
     return render_template("admin_add.html")
 
-with app.app_context():
-        db.create_all()
+# Route admin xóa hộp quà
+@app.route("/admin/delete/<int:gift_id>", methods=["POST"])
+def delete_gift(gift_id):
+    if not session.get("admin"):
+        flash("Bạn không có quyền xóa!")
+        return redirect(url_for("admin_login"))
+    
+    gift = GiftBox.query.get_or_404(gift_id)
+    # Nếu gift đã có người chọn, bạn có thể cảnh báo hoặc cho phép xóa
+    db.session.delete(gift)
+    db.session.commit()
+    flash("Hộp quà đã được xóa!")
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     app.run(debug=True)
