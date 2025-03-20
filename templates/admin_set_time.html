@@ -25,8 +25,11 @@
       <form method="post" class="mx-auto" style="max-width: 400px;">
         <div class="mb-3">
           <label class="form-label">Thời gian (UTC) (YYYY-MM-DDTHH:MM):</label>
-          <!-- Input datetime-local tự động sử dụng định dạng 24 giờ -->
-          <input type="datetime-local" name="target_time" class="form-control" required>
+          <!-- Nếu đã có countdown, hiển thị giá trị mặc định theo định dạng 24 giờ -->
+          <input type="datetime-local" name="target_time" class="form-control" required
+            {% if countdown %}
+              value="{{ countdown.target_time.strftime('%Y-%m-%dT%H:%M') }}"
+            {% endif %}>
         </div>
         <button type="submit" class="btn btn-primary w-100">Cập nhật</button>
       </form>
