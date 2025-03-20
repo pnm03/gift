@@ -17,8 +17,8 @@ class GiftBox(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=True)
-    # Quan hệ 1-1 với Selection (mỗi hộp quà chỉ được chọn 1 lần)
-    selection = db.relationship('Selection', backref='gift', uselist=False)
+    # Sử dụng cascade để tự động xóa các bản ghi Selection khi GiftBox bị xóa
+    selection = db.relationship('Selection', backref='gift', uselist=False, cascade="all, delete-orphan")
 
 # Model lưu thông tin lựa chọn quà của người dùng
 class Selection(db.Model):
