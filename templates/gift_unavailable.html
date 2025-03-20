@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hộp Quà Đã Được Chọn</title>
+    <script>
+      window.onload = function() {
+        alert("Hộp quà đã được chọn rồi!\nNội dung quà: {{ gift.content }}");
+        window.location.href = "{{ url_for('index') }}";
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

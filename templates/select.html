@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Chọn Quà: {{ gift.name }}</title>
+  </head>
+  <body>
+    <h1>Chọn Quà: {{ gift.name }}</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <form method="post">
+      <label>Tên sinh viên: <input type="text" name="student_name" /></label><br/>
+      <label>Mã sinh viên: <input type="text" name="student_code" /></label><br/>
+      <button type="submit">Gửi</button>
+    </form>
+  </body>
+</html>

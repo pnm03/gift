@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Danh sách Hộp Quà</title>
+    <style>
+      .gift-card {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        width: 300px;
+      }
+      .gift-card a {
+        text-decoration: none;
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Các Hộp Quà</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% for gift in gift_boxes %}
+      <div class="gift-card">
+        <h3>{{ gift.name }}</h3>
+        {% if gift.selection %}
+          <p>Đã chọn bởi: {{ gift.selection.student_name }} ({{ gift.selection.student_code }})</p>
+          <p><a href="{{ url_for('result', gift_id=gift.id) }}">Xem chi tiết</a></p>
+        {% else %}
+          <p>Chưa có ai chọn.</p>
+          <p><a href="{{ url_for('select_gift', gift_id=gift.id) }}">Chọn quà</a></p>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <p>
+      <a href="{{ url_for('add_gift') }}">Thêm hộp quà mới (Admin)</a>
+    </p>
+  </body>
+</html>
