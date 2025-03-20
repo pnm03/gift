@@ -4,23 +4,13 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# Đặt secret_key (nên để trong biến môi trường để bảo mật)
-app.secret_key = "supersecretkey"
+# Sử dụng SECRET_KEY từ biến môi trường nếu có, hoặc dùng giá trị mặc định (nên thay đổi cho bảo mật)
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
-# Kết nối PostgreSQL trên Render
-# Thay giá trị trực tiếp theo thông tin bạn cung cấp:
-# Hostname: dpg-cvxdp2a2i3r73bd24h20-a
-# Port: 5432
-# Database: test_gift
-# Username: test_gift_user
-# Password: qFybJnSvWjy7106FzmaI2kv7TB1jDNF
-
+# Cập nhật chuỗi kết nối PostgreSQL theo thông tin bạn cung cấp:
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "postgresql://test_gift_user:qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE@"
-    "dpg-cvdpab2n91rc73ba4h20-a.oregon-postgres.render.com/test_gift"
+    "postgresql://test_gift_user:qFbjqnJsMCyI1QO6XwnazWoXYTBjD0nE@dpg-cvdpab2n91rc73ba4h20-a/test_gift"
 )
-
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -30,14 +20,14 @@ class GiftBox(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=True)
-    # Quan hệ 1-1 với Selection
+    # Quan hệ 1-1 với Selection (mỗi hộp quà chỉ được chọn một lần)
     selection = db.relationship('Selection', backref='gift', uselist=False)
 
 # Model lưu thông tin lựa chọn quà của người dùng
 class Selection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_name = db.Column(db.String(100), nullable=False)
-    student_code = db.Column(db.String(50), nullable=False, unique=True)
+    student_code = db.Column(db.String(50), nullable=False, unique=True)  # Mỗi mã sinh viên chỉ chọn 1 lần
     gift_box_id = db.Column(db.Integer, db.ForeignKey("gift_box.id"), nullable=False)
 
 @app.route("/")
@@ -48,7 +38,7 @@ def index():
 @app.route("/result/<int:gift_id>")
 def result(gift_id):
     gift = GiftBox.query.get_or_404(gift_id)
-    # Nếu gift chưa được chọn, không cho xem chi tiết
+    # Nếu hộp quà chưa được chọn, không cho phép xem chi tiết
     if not gift.selection:
         flash("Hộp quà này chưa được chọn, bạn không thể xem chi tiết!")
         return redirect(url_for("index"))
@@ -57,7 +47,6 @@ def result(gift_id):
 @app.route("/select/<int:gift_id>", methods=["GET", "POST"])
 def select_gift(gift_id):
     gift = GiftBox.query.get_or_404(gift_id)
-    # Nếu đã được chọn, chuyển hướng
     if gift.selection:
         flash("Hộp quà này đã được chọn!")
         return redirect(url_for("result", gift_id=gift_id))
@@ -69,7 +58,6 @@ def select_gift(gift_id):
             flash("Vui lòng điền đầy đủ thông tin!")
             return redirect(url_for("select_gift", gift_id=gift_id))
         
-        # Kiểm tra xem mã sinh viên đã chọn quà chưa
         if Selection.query.filter_by(student_code=student_code).first():
             flash("Mã sinh viên của bạn đã chọn quà rồi!")
             return redirect(url_for("index"))
@@ -115,7 +103,8 @@ def add_gift():
             return redirect(url_for("index"))
     return render_template("admin_add.html")
 
-if __name__ == "__main__":
-    with app.app_context():
+with app.app_context():
         db.create_all()
+
+if __name__ == "__main__":
     app.run(debug=True)
