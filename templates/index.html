@@ -25,6 +25,26 @@
   <body>
     <div class="container my-4">
       <h1 class="text-center mb-4">Các Hộp Quà</h1>
+      
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert alert-info">
+            <ul class="mb-0">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      {% endwith %}
+      
+      {% if countdown and now < countdown.target_time %}
+        <div class="alert alert-warning text-center">
+          Chưa đến thời gian cho phép chọn quà! Vui lòng chờ:
+          <div id="countdownTimer" class="h4"></div>
+        </div>
+      {% endif %}
+      
       <div id="giftContainer" class="row">
         {% for gift in gift_boxes %}
           <div class="col-md-4 col-sm-6">
@@ -38,7 +58,9 @@
                   <a href="{{ url_for('result', gift_id=gift.id) }}" class="btn btn-primary btn-sm">Xem chi tiết</a>
                 {% else %}
                   <p class="card-text text-warning">Chưa có ai chọn.</p>
-                  <a href="{{ url_for('select_gift', gift_id=gift.id) }}" class="btn btn-outline-primary btn-sm">Chọn quà</a>
+                  {% if not (countdown and now < countdown.target_time) %}
+                    <a href="{{ url_for('select_gift', gift_id=gift.id) }}" class="btn btn-outline-primary btn-sm">Chọn quà</a>
+                  {% endif %}
                 {% endif %}
                 {% if session.get("admin") %}
                   <form action="{{ url_for('delete_gift', gift_id=gift.id) }}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa hộp quà này?');" class="mt-2">
@@ -50,13 +72,40 @@
           </div>
         {% endfor %}
       </div>
+      
       <div class="text-center">
         <a href="{{ url_for('add_gift') }}" class="btn btn-secondary">Thêm hộp quà mới (Admin)</a>
+        <a href="{{ url_for('set_time') }}" class="btn btn-secondary">Set Countdown (Admin)</a>
       </div>
     </div>
     
-    <!-- JavaScript để tự động cập nhật danh sách qua AJAX -->
+    <!-- JavaScript để cập nhật countdown -->
     <script>
+      {% if countdown and now < countdown.target_time %}
+      // Lấy target time từ server (dạng ISO string, giả sử UTC)
+      const targetTime = new Date("{{ countdown.target_time.isoformat() }}Z");
+      
+      function updateCountdown() {
+        const now = new Date();
+        const diff = targetTime - now;
+        if(diff <= 0) {
+          document.getElementById("countdownTimer").innerHTML = "Đã hết giờ!";
+          // Có thể reload lại trang khi hết giờ
+          window.location.reload();
+        } else {
+          const hours = Math.floor(diff / 3600000);
+          const minutes = Math.floor((diff % 3600000) / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          document.getElementById("countdownTimer").innerHTML =
+            hours + "h " + minutes + "m " + seconds + "s";
+        }
+      }
+      
+      setInterval(updateCountdown, 1000);
+      updateCountdown();
+      {% endif %}
+      
+      // Optionally, AJAX polling để cập nhật danh sách gift boxes
       async function updateGiftBoxes() {
         try {
           const response = await fetch('/api/gift_boxes');
@@ -74,10 +123,11 @@
                        </p>
                        <a href="/result/${gift.id}" class="btn btn-primary btn-sm">Xem chi tiết</a>`;
             } else {
-              html += `<p class="card-text text-warning">Chưa có ai chọn.</p>
-                       <a href="/select/${gift.id}" class="btn btn-outline-primary btn-sm">Chọn quà</a>`;
+              html += `<p class="card-text text-warning">Chưa có ai chọn.</p>`;
+              {% if not (countdown and now < countdown.target_time) %}
+              html += `<a href="/select/${gift.id}" class="btn btn-outline-primary btn-sm">Chọn quà</a>`;
+              {% endif %}
             }
-            // Nếu có điều kiện admin, bạn có thể chèn nút xóa ở đây (ví dụ dựa vào một flag isAdmin)
             html += `</div></div></div>`;
           });
           container.innerHTML = html;
@@ -85,9 +135,10 @@
           console.error("Lỗi cập nhật hộp quà:", error);
         }
       }
-      // Polling AJAX mỗi 2 giây (2000 ms)
+      // Polling AJAX mỗi 2 giây
       setInterval(updateGiftBoxes, 2000);
     </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
