@@ -1,6 +1,8 @@
 import os
 from flask import Flask, redirect, url_for, request, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from flask import jsonify
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
@@ -35,6 +37,22 @@ with app.app_context():
 def index():
     gift_boxes = GiftBox.query.all()
     return render_template("index.html", gift_boxes=gift_boxes)
+
+@app.route("/api/gift_boxes")
+def api_gift_boxes():
+    gift_boxes = GiftBox.query.all()
+    data = []
+    for gift in gift_boxes:
+        data.append({
+            "id": gift.id,
+            "name": gift.name,
+            "selected": True if gift.selection else False,
+            "student_name": gift.selection.student_name if gift.selection else None,
+            "student_code": gift.selection.student_code if gift.selection else None,
+        })
+    return jsonify(data)
+
+
 
 @app.route("/result/<int:gift_id>")
 def result(gift_id):
