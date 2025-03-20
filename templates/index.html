@@ -11,30 +11,41 @@
       .gift-card:hover {
         transform: scale(1.02);
       }
+      .gift-card .card-body {
+        padding: 10px;
+      }
+      .gift-card h5 {
+        font-size: 1.1rem;
+      }
+      .gift-card p {
+        font-size: 0.9rem;
+      }
     </style>
   </head>
   <body>
     <div class="container my-4">
       <h1 class="text-center mb-4">Các Hộp Quà</h1>
-      <div id="giftContainer">
+      <div id="giftContainer" class="row">
         {% for gift in gift_boxes %}
-          <div class="card gift-card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">{{ gift.name }}</h5>
-              {% if gift.selection %}
-                <p class="card-text text-success">
-                  Đã chọn bởi: {{ gift.selection.student_name }} ({{ gift.selection.student_code }})
-                </p>
-                <a href="{{ url_for('result', gift_id=gift.id) }}" class="btn btn-primary">Xem chi tiết</a>
-              {% else %}
-                <p class="card-text text-warning">Chưa có ai chọn.</p>
-                <a href="{{ url_for('select_gift', gift_id=gift.id) }}" class="btn btn-outline-primary">Chọn quà</a>
-              {% endif %}
-              {% if session.get("admin") %}
-                <form action="{{ url_for('delete_gift', gift_id=gift.id) }}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hộp quà này?');" class="mt-2">
-                  <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
-                </form>
-              {% endif %}
+          <div class="col-md-4 col-sm-6">
+            <div class="card gift-card mb-4">
+              <div class="card-body">
+                <h5 class="card-title">{{ gift.name }}</h5>
+                {% if gift.selection %}
+                  <p class="card-text text-success">
+                    Đã chọn bởi: {{ gift.selection.student_name }} ({{ gift.selection.student_code }})
+                  </p>
+                  <a href="{{ url_for('result', gift_id=gift.id) }}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+                {% else %}
+                  <p class="card-text text-warning">Chưa có ai chọn.</p>
+                  <a href="{{ url_for('select_gift', gift_id=gift.id) }}" class="btn btn-outline-primary btn-sm">Chọn quà</a>
+                {% endif %}
+                {% if session.get("admin") %}
+                  <form action="{{ url_for('delete_gift', gift_id=gift.id) }}" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa hộp quà này?');" class="mt-2">
+                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                  </form>
+                {% endif %}
+              </div>
             </div>
           </div>
         {% endfor %}
@@ -53,29 +64,28 @@
           const container = document.getElementById("giftContainer");
           let html = "";
           data.forEach(gift => {
-            html += `<div class="card gift-card mb-4">
-                      <div class="card-body">
-                        <h5 class="card-title">${gift.name}</h5>`;
+            html += `<div class="col-md-4 col-sm-6">
+                      <div class="card gift-card mb-4">
+                        <div class="card-body">
+                          <h5 class="card-title">${gift.name}</h5>`;
             if (gift.selected) {
               html += `<p class="card-text text-success">
                          Đã chọn bởi: ${gift.student_name} (${gift.student_code})
                        </p>
-                       <a href="/result/${gift.id}" class="btn btn-primary">Xem chi tiết</a>`;
+                       <a href="/result/${gift.id}" class="btn btn-primary btn-sm">Xem chi tiết</a>`;
             } else {
               html += `<p class="card-text text-warning">Chưa có ai chọn.</p>
-                       <a href="/select/${gift.id}" class="btn btn-outline-primary">Chọn quà</a>`;
+                       <a href="/select/${gift.id}" class="btn btn-outline-primary btn-sm">Chọn quà</a>`;
             }
-            // Hiển thị nút xóa nếu admin đăng nhập (để đơn giản, bạn có thể kiểm tra cookie hoặc thêm flag từ server)
-            // Ví dụ: nếu bạn có biến "isAdmin" được set trong một thẻ data-attribute, bạn có thể xử lý sau.
-            html += `</div></div>`;
+            // Nếu có điều kiện admin, bạn có thể chèn nút xóa ở đây (ví dụ dựa vào một flag isAdmin)
+            html += `</div></div></div>`;
           });
           container.innerHTML = html;
         } catch (error) {
           console.error("Lỗi cập nhật hộp quà:", error);
         }
       }
-
-      // Cập nhật danh sách mỗi 10 giây
+      // Polling AJAX mỗi 2 giây (2000 ms)
       setInterval(updateGiftBoxes, 2000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
